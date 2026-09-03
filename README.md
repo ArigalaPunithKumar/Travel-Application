@@ -1,6 +1,5 @@
 # 🌍 Wanderlust - AI-Powered Travel Planner
 
-![Wanderlust Hero](https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=1200&auto=format&fit=crop)
 
 ### 🚀 **Live Demo:** [travel-app-orpin-nine.vercel.app](https://travel-app-orpin-nine.vercel.app/)
 
