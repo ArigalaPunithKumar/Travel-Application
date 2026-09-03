@@ -2,6 +2,8 @@
 
 ![Wanderlust Hero](https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=1200&auto=format&fit=crop)
 
+### 🚀 **Live Demo:** [travel-app-orpin-nine.vercel.app](https://travel-app-orpin-nine.vercel.app/)
+
 ## 📖 Overview
 **Wanderlust** is a modern, premium AI-powered travel planning application. It removes the stress of trip planning by instantly generating highly personalized, day-by-day itineraries based on a user's destination, budget, and travel style. It features a sleek dark-themed UI, live weather updates, geolocation support, and integrated AI assistants to answer any travel-related queries.
 
