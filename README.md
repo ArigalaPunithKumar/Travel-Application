@@ -1,7 +1,7 @@
 # 🌍 Wanderlust - AI-Powered Travel Planner
 
-| (<img width="1899" height="924" alt="image" src="https://github.com/user-attachments/assets/b7f5827b-35b5-4225-91e1-bc05af7b6ebf" />
-)
+<img width="1899" height="924" alt="image" src="https://github.com/user-attachments/assets/b7f5827b-35b5-4225-91e1-bc05af7b6ebf" />
+
 
 
 ### 🚀 **Live Demo:** [travel-app-orpin-nine.vercel.app](https://travel-app-orpin-nine.vercel.app/)
@@ -17,9 +17,9 @@
 
 | Home Page & Quick Planner | AI Generated Itinerary |
 | :---: | :---: |
-| (<img width="1897" height="939" alt="image" src="https://github.com/user-attachments/assets/79fdedad-9dcf-44a5-a3aa-1ec18b398ec4" />
-) |(<img width="1878" height="933" alt="image" src="https://github.com/user-attachments/assets/47caa995-6aba-4d1f-8a1f-452afc2d52c2" />
-) |
+(<img width="1897" height="939" alt="image" src="https://github.com/user-attachments/assets/79fdedad-9dcf-44a5-a3aa-1ec18b398ec4" />
+<img width="1878" height="933" alt="image" src="https://github.com/user-attachments/assets/47caa995-6aba-4d1f-8a1f-452afc2d52c2" />
+
 
 | Destination Details & Chatbot | Live Weather Widget |
 | :---: | :---: |
