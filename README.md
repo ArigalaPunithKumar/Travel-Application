@@ -1,6 +1,7 @@
 # 🌍 Wanderlust - AI-Powered Travel Planner
 
-![Wanderlust Hero](https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=1200&auto=format&fit=crop)
+![Wanderlust Hero](<img width="1914" height="939" alt="image" src="https://github.com/user-attachments/assets/c50d96b2-b112-4ac2-8791-0cedf72fc2d7" />
+)
 
 ### 🚀 **Live Demo:** [travel-app-orpin-nine.vercel.app](https://travel-app-orpin-nine.vercel.app/)
 
@@ -15,11 +16,15 @@
 
 | Home Page & Quick Planner | AI Generated Itinerary |
 | :---: | :---: |
-| ![Home Page Placeholder](https://via.placeholder.com/600x350/1a1a2e/ffffff?text=Add+Home+Page+Screenshot) | ![Planner Placeholder](https://via.placeholder.com/600x350/1a1a2e/ffffff?text=Add+Planner+Screenshot) |
+| ![Home Page Placeholder](<img width="1897" height="939" alt="image" src="https://github.com/user-attachments/assets/79fdedad-9dcf-44a5-a3aa-1ec18b398ec4" />
+) | ![Planner Placeholder](<img width="1878" height="933" alt="image" src="https://github.com/user-attachments/assets/47caa995-6aba-4d1f-8a1f-452afc2d52c2" />
+) |
 
 | Destination Details & Chatbot | Live Weather Widget |
 | :---: | :---: |
-| ![Destination Placeholder](https://via.placeholder.com/600x350/1a1a2e/ffffff?text=Add+Destination+Screenshot) | ![Weather Placeholder](https://via.placeholder.com/600x350/1a1a2e/ffffff?text=Add+Weather+Screenshot) |
+| ![Destination Placeholder](<img width="1878" height="933" alt="image" src="https://github.com/user-attachments/assets/4a1ee751-4e5b-4e2e-93b1-129d960d826e" />
+) | ![Weather Placeholder](<img width="1234" height="344" alt="image" src="https://github.com/user-attachments/assets/fc058f73-4d91-4d01-bf90-ad4bb41bc237" />
+) |
 
 ---
 
