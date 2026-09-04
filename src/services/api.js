@@ -40,114 +40,9 @@ export async function getDestinationImage(query, fallbackUrl) {
   }
 }
 
-export async function askAI(prompt, context) {
-  if (!OPENROUTER_API_KEY) {
-    console.warn("No OpenRouter API key provided. Using mock chat response.");
-    return "I am a mock AI assistant. Please add your OpenRouter API key to `.env` to enable real AI capabilities. To answer your question: " + context.substring(0, 50) + "...";
-  }
-
-  try {
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "meta-llama/llama-3.1-8b-instruct:free",
-        messages: [
-          {
-            role: "system",
-            content: `You are a helpful travel guide assistant. Use this context about the destination to answer questions: ${context}. 
-            IMPORTANT: If the user asks for recommendations like hotels, restaurants, or places to visit, you MUST return your response as raw HTML using Tailwind CSS classes for beautiful cards. For example, for a hotel use: <div class="bg-slate-50 p-4 rounded-xl shadow-sm border border-slate-200 mb-3"><h4 class="font-bold text-lg text-primary">Hotel Name</h4><p class="text-sm text-slate-600 mt-1">Description...</p></div>. 
-            Do NOT use markdown (no asterisks, no backticks). Return ONLY valid HTML that can be rendered directly.`
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ]
-      })
-    });
-    const data = await res.json();
-    return data?.choices?.[0]?.message?.content || "Sorry, I couldn't process that.";
-  } catch (error) {
-    console.error("Error asking AI via OpenRouter:", error);
-    return "Sorry, I encountered an error connecting to the AI.";
-  }
-}
-
-export async function generateItinerary(destination, days = 3) {
-  if (!OPENROUTER_API_KEY) {
-    console.warn("No OpenRouter API key provided. Using mock itinerary.");
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve([
-          { day: 1, title: 'Arrival & Exploration', activities: ['Check into hotel', 'Visit local market', 'Dinner at famous restaurant'] },
-          { day: 2, title: 'Sightseeing & Culture', activities: ['Guided city tour', 'Museum visit', 'Sunset viewing'] },
-          { day: 3, title: 'Adventure & Departure', activities: ['Morning hike/activity', 'Souvenir shopping', 'Head to airport'] }
-        ]);
-      }, 1500);
-    });
-  }
-
-  try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "meta-llama/llama-3.1-8b-instruct:free",
-        messages: [
-          {
-            role: "user",
-            content: `Create a ${days}-day travel itinerary for ${destination}. 
-            Return ONLY a valid JSON array of objects. Do NOT wrap it in markdown blockquotes like \`\`\`json.
-            Each object must have exactly these keys:
-            - "day": number (e.g. 1)
-            - "title": string (brief theme for the day)
-            - "activities": array of 3 strings (specific things to do)`
-          }
-        ]
-      })
-    });
-
-    const data = await response.json();
-    const textContent = data.choices[0].message.content;
-    
-    // Attempt to parse JSON safely, sometimes AI returns markdown around it
-    let cleanJson = textContent;
-    if (cleanJson.includes('```json')) {
-      cleanJson = cleanJson.split('```json')[1].split('```')[0].trim();
-    } else if (cleanJson.includes('```')) {
-      cleanJson = cleanJson.split('```')[1].split('```')[0].trim();
-    }
-    
-    return JSON.parse(cleanJson);
-  } catch (error) {
-    console.error("Error generating itinerary from OpenRouter:", error);
-    return [
-      { day: 1, title: 'Arrival & Exploration (Fallback)', activities: ['Check into hotel', 'Visit local market', 'Dinner at famous restaurant'] },
-      { day: 2, title: 'Sightseeing & Culture (Fallback)', activities: ['Guided city tour', 'Museum visit', 'Sunset viewing'] },
-      { day: 3, title: 'Adventure & Departure (Fallback)', activities: ['Morning hike/activity', 'Souvenir shopping', 'Head to airport'] }
-    ];
-  }
-}
-
-export async function getTravelAdvisory(location, weather) {
-  if (!OPENROUTER_API_KEY) {
-    return null;
-  }
-
-  const currentDate = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
-  let weatherContext = "";
-  if (weather) {
-    weatherContext = `The current live weather in ${location} is ${weather.temp}°C with ${weather.condition}. `;
-  }
-
+async function callAI(messages, maxTokens = null) {
   const models = [
+    "google/gemini-2.5-flash:free",
     "meta-llama/llama-3.1-8b-instruct:free",
     "google/gemma-3n-e4b-it:free"
   ];
@@ -155,7 +50,10 @@ export async function getTravelAdvisory(location, weather) {
   for (const model of models) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000);
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+      const body = { model, messages };
+      if (maxTokens) body.max_tokens = maxTokens;
 
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
@@ -163,56 +61,128 @@ export async function getTravelAdvisory(location, weather) {
           "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          model: model,
-          max_tokens: 200,
-          messages: [
-            {
-              role: "system",
-              content: `You are a concise travel safety advisor. Today is ${currentDate}. Reply in 2-3 sentences MAXIMUM. No markdown.`
-            },
-            {
-              role: "user",
-              content: `${weatherContext}For "${location}", briefly warn about: 1) Any recent natural disasters (floods, earthquakes, cyclones) 2) Any recent man-made risks (unrest, disease) 3) Any risks associated with the current live weather. If nothing dangerous, say "Current weather is favorable for travel to ${location}."`
-            }
-          ]
-        }),
+        body: JSON.stringify(body),
         signal: controller.signal
       });
 
       clearTimeout(timeoutId);
+      if (!response.ok) continue;
+
       const data = await response.json();
       const result = data?.choices?.[0]?.message?.content;
-      if (result && result.trim().length > 10) {
+      
+      if (result && result.trim().length > 5) {
         return result.trim();
       }
     } catch (error) {
-      if (error.name === 'AbortError') {
-        console.warn(`Advisory timed out with model ${model}, trying next...`);
-        continue;
-      }
-      console.error(`Advisory error with model ${model}:`, error);
+      console.warn(`Model ${model} failed or timed out. Trying next...`);
       continue;
     }
   }
+  throw new Error("All AI models failed or timed out.");
+}
 
-  // If AI models all failed, generate a highly contextual fallback based on real live weather
-  if (weather) {
-    const temp = weather.temp;
-    const cond = weather.condition.toLowerCase();
-    
-    if (cond.includes("rain") || cond.includes("storm") || cond.includes("drizzle") || cond.includes("thunder")) {
-      return `Current live weather in ${location} shows ${temp}°C and ${cond}. Please carry waterproof gear, check road conditions before traveling, and be cautious of waterlogging or localized flooding.`;
-    }
-    if (temp > 35) {
-      return `Current live weather in ${location} shows a very hot ${temp}°C. Stay hydrated, carry sunscreen, and avoid prolonged outdoor activities during peak afternoon hours to prevent heatstroke.`;
-    }
-    if (temp < 5) {
-      return `Current live weather in ${location} shows a very cold ${temp}°C. Pack adequate warm winter clothing, check for fog-related travel delays, and be cautious on icy roads.`;
-    }
-    return `Current live weather in ${location} is ${temp}°C with ${cond}. Conditions are generally favorable for travel.`;
+export async function askAI(prompt, context) {
+  if (!OPENROUTER_API_KEY) {
+    console.warn("No OpenRouter API key provided.");
+    return "Please add your OpenRouter API key to `.env` to enable real AI capabilities.";
   }
 
-  // Ultimate fallback if no weather object is provided
-  return `Weather is generally favorable for travel to ${location} during this season.`;
+  try {
+    const response = await callAI([
+      {
+        role: "system",
+        content: `You are a helpful travel guide assistant. Use this context about the destination to answer questions: ${context}. 
+        IMPORTANT: If the user asks for recommendations like hotels, restaurants, or places to visit, you MUST return your response as raw HTML using Tailwind CSS classes for beautiful cards. For example, for a hotel use: <div class="bg-slate-50 p-4 rounded-xl shadow-sm border border-slate-200 mb-3"><h4 class="font-bold text-lg text-primary">Hotel Name</h4><p class="text-sm text-slate-600 mt-1">Description...</p></div>. 
+        Do NOT use markdown (no asterisks, no backticks). Return ONLY valid HTML that can be rendered directly.`
+      },
+      {
+        role: "user",
+        content: prompt
+      }
+    ]);
+    return response;
+  } catch (error) {
+    console.error("Error asking AI:", error);
+    return "Sorry, I am currently experiencing high traffic and couldn't process that. Please try again in a moment.";
+  }
+}
+
+export async function generateItinerary(destination, days = 3) {
+  if (!OPENROUTER_API_KEY) {
+    return [
+      { day: 1, title: 'Arrival & Exploration (Fallback)', activities: ['Check into hotel', 'Visit local market', 'Dinner'] },
+      { day: 2, title: 'Sightseeing (Fallback)', activities: ['Guided city tour', 'Museum visit', 'Sunset viewing'] },
+      { day: 3, title: 'Departure (Fallback)', activities: ['Morning activity', 'Souvenir shopping', 'Head to airport'] }
+    ];
+  }
+
+  try {
+    const textContent = await callAI([
+      {
+        role: "user",
+        content: `Create a ${days}-day travel itinerary for ${destination}. 
+        Return ONLY a valid JSON array of objects. Do NOT wrap it in markdown blockquotes like \`\`\`json.
+        Each object must have exactly these keys:
+        - "day": number (e.g. 1)
+        - "title": string (brief theme for the day)
+        - "activities": array of 3 strings (specific things to do)`
+      }
+    ], 1000);
+    
+    let cleanJson = textContent;
+    if (cleanJson.includes('```json')) cleanJson = cleanJson.split('```json')[1].split('```')[0].trim();
+    else if (cleanJson.includes('```')) cleanJson = cleanJson.split('```')[1].split('```')[0].trim();
+    
+    return JSON.parse(cleanJson);
+  } catch (error) {
+    console.error("Error generating itinerary:", error);
+    return [
+      { day: 1, title: 'Arrival & Exploration (Fallback)', activities: ['Check into hotel', 'Visit local market', 'Dinner'] },
+      { day: 2, title: 'Sightseeing (Fallback)', activities: ['Guided city tour', 'Museum visit', 'Sunset viewing'] },
+      { day: 3, title: 'Departure (Fallback)', activities: ['Morning activity', 'Souvenir shopping', 'Head to airport'] }
+    ];
+  }
+}
+
+export async function getTravelAdvisory(location, weather) {
+  if (!OPENROUTER_API_KEY) return null;
+
+  const currentDate = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+  let weatherContext = "";
+  if (weather) {
+    weatherContext = `The current live weather in ${location} is ${weather.temp}°C with ${weather.condition}. `;
+  }
+
+  try {
+    const response = await callAI([
+      {
+        role: "system",
+        content: `You are a concise travel safety advisor. Today is ${currentDate}. Reply in 2-3 sentences MAXIMUM. No markdown.`
+      },
+      {
+        role: "user",
+        content: `${weatherContext}For "${location}", check your knowledge for any major news from the last 10-15 days. Briefly warn about: 1) Any recent natural disasters (floods, earthquakes, cyclones) 2) Any recent man-made risks (unrest, disease) 3) Any risks associated with the current live weather. If nothing dangerous, say "Based on recent reports, current conditions are favorable for travel to ${location}."`
+      }
+    ], 200);
+    return response;
+  } catch (error) {
+    console.error("Advisory error:", error);
+    // Ultimate fallback if AI completely fails
+    if (weather) {
+      const temp = weather.temp;
+      const cond = weather.condition.toLowerCase();
+      if (cond.includes("rain") || cond.includes("storm") || cond.includes("drizzle") || cond.includes("thunder")) {
+        return `Current live weather in ${location} shows ${temp}°C and ${cond}. Please carry waterproof gear, check road conditions, and be cautious of localized flooding.`;
+      }
+      if (temp > 35) {
+        return `Current live weather in ${location} shows a very hot ${temp}°C. Stay hydrated and avoid prolonged outdoor activities during peak hours.`;
+      }
+      if (temp < 5) {
+        return `Current live weather in ${location} shows a very cold ${temp}°C. Pack adequate warm clothing and be cautious on icy roads.`;
+      }
+      return `Current live weather in ${location} is ${temp}°C with ${cond}. Conditions appear favorable for travel.`;
+    }
+    return `Conditions are generally favorable for travel to ${location} during this season.`;
+  }
 }
