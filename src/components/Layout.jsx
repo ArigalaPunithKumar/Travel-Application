@@ -1,6 +1,16 @@
+import { useState, useEffect } from 'react';
+import { ArrowUp } from 'lucide-react';
 import Navbar from './Navbar';
 
 export default function Layout({ children }) {
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setShowScrollTop(window.scrollY > 400);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-[#12121f] relative selection:bg-primary/20 font-sans">
       {/* Ambient Premium Background — Vivid & Dark */}
@@ -65,6 +75,18 @@ export default function Layout({ children }) {
         </div>
       </footer>
       </div>
+
+      {/* Global Back to Top Button */}
+      {showScrollTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-primary to-secondary text-white p-3 rounded-full shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 animate-bounce"
+          style={{ animationDuration: '2s' }}
+          aria-label="Back to top"
+        >
+          <ArrowUp className="w-5 h-5" />
+        </button>
+      )}
     </div>
   );
 }

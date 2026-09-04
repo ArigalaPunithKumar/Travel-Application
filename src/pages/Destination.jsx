@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MapPin, ArrowLeft, Cloud, ThermometerSun, Calendar, Sparkles, Send, Loader2, ArrowUp } from 'lucide-react';
+import { MapPin, ArrowLeft, Cloud, ThermometerSun, Calendar, Sparkles, Send, Loader2, ArrowUp, ShieldAlert, Phone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { destinations } from '../data/destinations';
-import { getDestinationImage, getWeather, askAI, generateItinerary } from '../services/api';
+import { getDestinationImage, getWeather, askAI, generateItinerary, getTravelAdvisory } from '../services/api';
 
 export default function Destination() {
   const { id } = useParams();
@@ -20,6 +20,7 @@ export default function Destination() {
   
   const chatEndRef = useRef(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [advisory, setAdvisory] = useState(null);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
@@ -44,6 +45,7 @@ export default function Destination() {
     if (dest) {
       getDestinationImage(`${dest.name} ${dest.country} landmark high quality`, dest.imageUrl).then(setImageUrl);
       getWeather(dest.latitude, dest.longitude).then(setWeather);
+      getTravelAdvisory(`${dest.name}, ${dest.country}`).then(res => { if (res) setAdvisory(res); });
       
       setChatMessages([
         { role: 'ai', text: `Hi! I'm your AI guide for ${dest.name}. Ask me what to pack, when to go, or hidden gems to explore!` }
@@ -224,6 +226,63 @@ export default function Destination() {
             ) : (
               <div className="animate-pulse flex space-x-4 h-20 items-center text-white/70">Loading weather...</div>
             )}
+          </div>
+
+          {/* Travel Advisory */}
+          {advisory && (
+            <motion.div 
+              initial={{opacity:0, y:10}} 
+              animate={{opacity:1, y:0}}
+              className={`text-sm flex items-start p-5 rounded-2xl border ${
+                advisory.toLowerCase().includes('warning') || advisory.toLowerCase().includes('not recommended') || advisory.toLowerCase().includes('flood') || advisory.toLowerCase().includes('earthquake') || advisory.toLowerCase().includes('cyclone') || advisory.toLowerCase().includes('attack')
+                ? 'bg-red-500/10 border-red-500/30 text-red-300'
+                : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+              }`}
+            >
+              <ShieldAlert className={`w-6 h-6 mr-3 flex-shrink-0 mt-0.5 ${
+                advisory.toLowerCase().includes('warning') || advisory.toLowerCase().includes('not recommended') || advisory.toLowerCase().includes('flood')
+                ? 'text-red-400 animate-pulse'
+                : 'text-amber-400'
+              }`} />
+              <div className="font-medium leading-relaxed">
+                <span className="font-bold block mb-1 text-base">⚠️ Travel Safety Advisory</span>
+                {advisory}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Emergency Contacts */}
+          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-5">
+            <h3 className="font-semibold text-lg text-white mb-3 flex items-center">
+              <Phone className="w-5 h-5 mr-2 text-emerald-400" /> Emergency Contacts
+            </h3>
+            <div className="space-y-2 text-sm text-slate-400">
+              {dest.country === 'India' && (
+                <>
+                  <p>🚔 Police: <span className="text-white font-medium">100</span></p>
+                  <p>🚑 Ambulance: <span className="text-white font-medium">108</span></p>
+                  <p>🔥 Fire: <span className="text-white font-medium">101</span></p>
+                  <p>📞 Women Helpline: <span className="text-white font-medium">181</span></p>
+                  <p>🆘 Disaster: <span className="text-white font-medium">112 (Universal)</span></p>
+                </>
+              )}
+              {dest.country === 'United States' && (
+                <>
+                  <p>🚔 Police / 🚑 Ambulance / 🔥 Fire: <span className="text-white font-medium">911</span></p>
+                  <p>🆘 Non-Emergency: <span className="text-white font-medium">311</span></p>
+                </>
+              )}
+              {dest.country === 'Japan' && (
+                <>
+                  <p>🚔 Police: <span className="text-white font-medium">110</span></p>
+                  <p>🚑 Ambulance / 🔥 Fire: <span className="text-white font-medium">119</span></p>
+                </>
+              )}
+              {dest.country !== 'India' && dest.country !== 'United States' && dest.country !== 'Japan' && (
+                <p>🆘 Universal Emergency: <span className="text-white font-medium">112</span></p>
+              )}
+              <p className="text-xs text-slate-500 mt-2 italic">Save these numbers before you travel!</p>
+            </div>
           </div>
 
           {/* AI Chatbot */}

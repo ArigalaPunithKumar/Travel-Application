@@ -141,32 +141,55 @@ export async function getTravelAdvisory(location) {
     return null;
   }
 
-  try {
-    const currentDate = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "meta-llama/llama-3.1-8b-instruct:free",
-        messages: [
-          {
-            role: "system",
-            content: `You are a real-time travel safety advisor. The current date is ${currentDate}. If the location is Nepal or regions in Nepal, immediately issue a severe travel warning stating that travel is currently not recommended due to severe ongoing floods and safety risks. For other locations, provide a brief (1-2 sentences) advisory about seasonal natural calamities.`
-          },
-          {
-            role: "user",
-            content: `Analyze the location: ${location}. Provide a very brief travel advisory warning about any current or upcoming seasonal natural calamities. If the weather is generally safe right now, say "Weather is currently favorable for travel."`
-          }
-        ]
-      })
-    });
-    const data = await response.json();
-    return data?.choices?.[0]?.message?.content || null;
-  } catch (error) {
-    console.error("Error getting advisory:", error);
-    return null;
+  const currentDate = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+  const models = [
+    "meta-llama/llama-3.1-8b-instruct:free",
+    "google/gemma-3n-e4b-it:free"
+  ];
+
+  for (const model of models) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: model,
+          max_tokens: 200,
+          messages: [
+            {
+              role: "system",
+              content: `You are a concise travel safety advisor. Today is ${currentDate}. Reply in 2-3 sentences MAXIMUM. No markdown.`
+            },
+            {
+              role: "user",
+              content: `For "${location}", briefly warn about: 1) Any recent natural disasters (floods, earthquakes, cyclones, landslides, tsunamis) 2) Any recent man-made risks (terrorist attacks, political unrest, protests, disease outbreaks) 3) Current seasonal weather risks. If nothing dangerous, say "Weather is currently favorable for travel to ${location}."`
+            }
+          ]
+        }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+      const data = await response.json();
+      const result = data?.choices?.[0]?.message?.content;
+      if (result && result.trim().length > 10) {
+        return result.trim();
+      }
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        console.warn(`Advisory timed out with model ${model}, trying next...`);
+        continue;
+      }
+      console.error(`Advisory error with model ${model}:`, error);
+      continue;
+    }
   }
+
+  return "Please check local news for the latest travel advisories for this destination.";
 }
