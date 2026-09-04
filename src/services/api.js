@@ -41,16 +41,13 @@ export async function getDestinationImage(query, fallbackUrl) {
 }
 
 async function callAI(messages, maxTokens = null) {
-  const models = [
-    "google/gemini-2.5-flash:free",
-    "meta-llama/llama-3.1-8b-instruct:free",
-    "google/gemma-3n-e4b-it:free"
-  ];
+  const model = "meta-llama/llama-3.1-8b-instruct:free";
+  const maxRetries = 3;
 
-  for (const model of models) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout for Llama
 
       const body = { model, messages };
       if (maxTokens) body.max_tokens = maxTokens;
@@ -66,7 +63,15 @@ async function callAI(messages, maxTokens = null) {
       });
 
       clearTimeout(timeoutId);
-      if (!response.ok) continue;
+      
+      if (!response.ok) {
+        if (response.status === 429) {
+          console.warn(`Rate limited by OpenRouter on attempt ${attempt}. Retrying...`);
+          await new Promise(resolve => setTimeout(resolve, 1500 * attempt)); // Exponential backoff
+          continue;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const data = await response.json();
       const result = data?.choices?.[0]?.message?.content;
@@ -75,11 +80,12 @@ async function callAI(messages, maxTokens = null) {
         return result.trim();
       }
     } catch (error) {
-      console.warn(`Model ${model} failed or timed out. Trying next...`);
-      continue;
+      console.warn(`Attempt ${attempt} failed:`, error.message);
+      if (attempt === maxRetries) throw error;
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
-  throw new Error("All AI models failed or timed out.");
+  throw new Error("AI request failed after multiple attempts.");
 }
 
 export async function askAI(prompt, context) {
