@@ -44,8 +44,12 @@ export default function Destination() {
   useEffect(() => {
     if (dest) {
       getDestinationImage(`${dest.name} ${dest.country} landmark high quality`, dest.imageUrl).then(setImageUrl);
-      getWeather(dest.latitude, dest.longitude).then(setWeather);
-      getTravelAdvisory(`${dest.name}, ${dest.country}`).then(res => { if (res) setAdvisory(res); });
+      getWeather(dest.latitude, dest.longitude).then(w => {
+        setWeather(w);
+        if (w) {
+          getTravelAdvisory(`${dest.name}, ${dest.country}`, w).then(res => { if (res) setAdvisory(res); });
+        }
+      });
       
       setChatMessages([
         { role: 'ai', text: `Hi! I'm your AI guide for ${dest.name}. Ask me what to pack, when to go, or hidden gems to explore!` }

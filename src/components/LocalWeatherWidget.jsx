@@ -20,8 +20,8 @@ export default function LocalWeatherWidget() {
         setWeather(data);
         setStatus('success');
         
-        // Fetch AI advisory asynchronously
-        getTravelAdvisory(name).then(res => {
+        // Fetch AI advisory asynchronously with current weather
+        getTravelAdvisory(name, data).then(res => {
           if (res) setAdvisory(res);
         });
       } else {

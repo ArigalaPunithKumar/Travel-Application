@@ -136,12 +136,17 @@ export async function generateItinerary(destination, days = 3) {
   }
 }
 
-export async function getTravelAdvisory(location) {
+export async function getTravelAdvisory(location, weather) {
   if (!OPENROUTER_API_KEY) {
     return null;
   }
 
   const currentDate = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+  let weatherContext = "";
+  if (weather) {
+    weatherContext = `The current live weather in ${location} is ${weather.temp}°C with ${weather.condition}. `;
+  }
+
   const models = [
     "meta-llama/llama-3.1-8b-instruct:free",
     "google/gemma-3n-e4b-it:free"
@@ -168,7 +173,7 @@ export async function getTravelAdvisory(location) {
             },
             {
               role: "user",
-              content: `For "${location}", briefly warn about: 1) Any recent natural disasters (floods, earthquakes, cyclones, landslides, tsunamis) 2) Any recent man-made risks (terrorist attacks, political unrest, protests, disease outbreaks) 3) Current seasonal weather risks. If nothing dangerous, say "Weather is currently favorable for travel to ${location}."`
+              content: `${weatherContext}For "${location}", briefly warn about: 1) Any recent natural disasters (floods, earthquakes, cyclones) 2) Any recent man-made risks (unrest, disease) 3) Any risks associated with the current live weather. If nothing dangerous, say "Current weather is favorable for travel to ${location}."`
             }
           ]
         }),
@@ -191,20 +196,23 @@ export async function getTravelAdvisory(location) {
     }
   }
 
-  // If AI models all failed, generate a useful seasonal fallback based on current month
-  const month = new Date().getMonth(); // 0-11
-  const seasonalTips = {
-    summer: `${location} may experience high temperatures during this season. Stay hydrated, carry sunscreen, and avoid prolonged outdoor activities during peak afternoon hours. Check for any heat wave alerts before traveling.`,
-    monsoon: `${location} may experience heavy rainfall and potential flooding during monsoon season. Carry waterproof gear, check road conditions before traveling, and be cautious of landslides in hilly areas.`,
-    winter: `${location} may experience cold conditions during winter. Pack warm clothing, check for fog-related travel delays, and be cautious on icy roads in northern/hilly regions.`,
-    autumn: `Weather is generally favorable for travel to ${location} during this season. Carry light layers as temperatures can vary between day and night.`
-  };
+  // If AI models all failed, generate a highly contextual fallback based on real live weather
+  if (weather) {
+    const temp = weather.temp;
+    const cond = weather.condition.toLowerCase();
+    
+    if (cond.includes("rain") || cond.includes("storm") || cond.includes("drizzle") || cond.includes("thunder")) {
+      return `Current live weather in ${location} shows ${temp}°C and ${cond}. Please carry waterproof gear, check road conditions before traveling, and be cautious of waterlogging or localized flooding.`;
+    }
+    if (temp > 35) {
+      return `Current live weather in ${location} shows a very hot ${temp}°C. Stay hydrated, carry sunscreen, and avoid prolonged outdoor activities during peak afternoon hours to prevent heatstroke.`;
+    }
+    if (temp < 5) {
+      return `Current live weather in ${location} shows a very cold ${temp}°C. Pack adequate warm winter clothing, check for fog-related travel delays, and be cautious on icy roads.`;
+    }
+    return `Current live weather in ${location} is ${temp}°C with ${cond}. Conditions are generally favorable for travel.`;
+  }
 
-  let season;
-  if (month >= 2 && month <= 5) season = 'summer';
-  else if (month >= 6 && month <= 8) season = 'monsoon';
-  else if (month >= 9 && month <= 10) season = 'autumn';
-  else season = 'winter';
-
-  return seasonalTips[season];
+  // Ultimate fallback if no weather object is provided
+  return `Weather is generally favorable for travel to ${location} during this season.`;
 }
