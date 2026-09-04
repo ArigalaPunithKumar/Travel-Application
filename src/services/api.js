@@ -191,5 +191,20 @@ export async function getTravelAdvisory(location) {
     }
   }
 
-  return "Please check local news for the latest travel advisories for this destination.";
+  // If AI models all failed, generate a useful seasonal fallback based on current month
+  const month = new Date().getMonth(); // 0-11
+  const seasonalTips = {
+    summer: `${location} may experience high temperatures during this season. Stay hydrated, carry sunscreen, and avoid prolonged outdoor activities during peak afternoon hours. Check for any heat wave alerts before traveling.`,
+    monsoon: `${location} may experience heavy rainfall and potential flooding during monsoon season. Carry waterproof gear, check road conditions before traveling, and be cautious of landslides in hilly areas.`,
+    winter: `${location} may experience cold conditions during winter. Pack warm clothing, check for fog-related travel delays, and be cautious on icy roads in northern/hilly regions.`,
+    autumn: `Weather is generally favorable for travel to ${location} during this season. Carry light layers as temperatures can vary between day and night.`
+  };
+
+  let season;
+  if (month >= 2 && month <= 5) season = 'summer';
+  else if (month >= 6 && month <= 8) season = 'monsoon';
+  else if (month >= 9 && month <= 10) season = 'autumn';
+  else season = 'winter';
+
+  return seasonalTips[season];
 }
