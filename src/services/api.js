@@ -41,7 +41,7 @@ export async function getDestinationImage(query, fallbackUrl) {
 }
 
 async function callAI(messages, maxTokens = null) {
-  const model = "meta-llama/llama-3.1-8b-instruct:free";
+  const model = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free";
   const maxRetries = 3;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
