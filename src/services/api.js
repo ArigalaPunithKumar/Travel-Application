@@ -54,7 +54,7 @@ export async function askAI(prompt, context) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+        model: "meta-llama/llama-3.1-8b-instruct:free",
         messages: [
           {
             role: "system",
@@ -99,7 +99,7 @@ export async function generateItinerary(destination, days = 3) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+        model: "meta-llama/llama-3.1-8b-instruct:free",
         messages: [
           {
             role: "user",
@@ -150,7 +150,7 @@ export async function getTravelAdvisory(location) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+        model: "meta-llama/llama-3.1-8b-instruct:free",
         messages: [
           {
             role: "system",

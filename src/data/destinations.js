@@ -264,7 +264,7 @@ export const destinations = [
     longitude: 79.4192,
     famousPlaces: ['Tirumala Venkateswara Temple', 'Sri Padmavathi Ammavari Temple', 'Silathoranam'],
     nearbyPlaces: ['Chennai (133km)', 'Vellore (110km)', 'Kanchipuram (110km)'],
-    imageUrl: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?q=80&w=1000&auto=format&fit=crop',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Tirumala_090615.jpg/1280px-Tirumala_090615.jpg',
   },
   {
     id: 'thiruvananthapuram-india',
@@ -276,6 +276,6 @@ export const destinations = [
     longitude: 76.9366,
     famousPlaces: ['Sree Padmanabhaswamy Temple', 'Napier Museum', 'Kovalam Beach'],
     nearbyPlaces: ['Varkala (40km)', 'Kanyakumari (90km)', 'Kollam (65km)'],
-    imageUrl: 'https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?q=80&w=1000&auto=format&fit=crop',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Sree_Padmanabhaswamy_temple_01.jpg/1280px-Sree_Padmanabhaswamy_temple_01.jpg',
   }
 ];
